@@ -1,0 +1,222 @@
+package main
+
+import (
+	"bytes"
+	"fmt"
+	"github.com/discord/lilliput"
+	"github.com/gin-gonic/gin"
+	"github.com/h2non/filetype"
+	"golang.org/x/sync/semaphore"
+	"html/template"
+	"net/http"
+	"path"
+	"runtime/debug"
+	"sync"
+	"time"
+)
+
+const (
+	maxThread = 4
+)
+
+var (
+	sem   *semaphore.Weighted
+	mutex sync.Mutex
+)
+
+var EncodeOptions = map[string]map[int]int{
+	".jpeg": {lilliput.JpegQuality: 85},
+	".png":  {lilliput.PngCompression: 7},
+	".webp": {lilliput.WebpQuality: 85},
+}
+
+func init() {
+	sem = semaphore.NewWeighted(maxThread)
+}
+
+func indexHandler(c *gin.Context) {
+	tp, err := template.ParseFiles("templates/folder.html")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	action := c.Param("action")
+	files, folders, err := Files(action)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	buf1 := new(bytes.Buffer)
+	for _, folder := range folders {
+		data1 := map[string]interface{}{
+			"name": folder.Name,
+			"href": path.Join(folderBaseUrl, action, folder.Name),
+		}
+
+		err = tp.Execute(buf1, data1)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
+	buf2 := new(bytes.Buffer)
+	for _, file := range files {
+		data2 := map[string]interface{}{
+			"name": file.Name,
+			"href": path.Join(fileBaseUrl, action, file.Name),
+		}
+
+		err = tp.Execute(buf2, data2)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
+	//fmt.Println(buf1.String())
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"title":      action,
+		"folderList": template.HTML(buf1.String()),
+		"fileList":   template.HTML(buf2.String()),
+	})
+}
+
+func folderHandler(c *gin.Context) {
+	action := c.Param("action")
+
+	files, folders, err := Files(action)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return
+	}
+
+	folderWaterfall := folderWaterfall(action, folders)
+	pictureWaterfall := pictureWaterfall(action, files)
+
+	c.HTML(http.StatusOK, "waterfall.html", gin.H{
+		"title":            action,
+		"folderWaterfall":  template.HTML(folderWaterfall),
+		"pictureWaterfall": template.HTML(pictureWaterfall),
+	})
+}
+
+var opsBig = lilliput.NewImageOps(1024 * 16)
+
+func previewHandler(c *gin.Context) {
+	action := c.Param("action")
+
+	file := readFileBytes(action, 8192)
+	fileIsImage := filetype.IsImage(file)
+	fileIsVideo := filetype.IsVideo(file)
+	if !(fileIsImage || fileIsVideo) {
+		c.Redirect(http.StatusFound, "/assets/file.webp")
+		return
+	}
+
+	fileModifiedTime := modifiedTime(action)
+
+	c.Header("Last-Modified", fileModifiedTime.Format(http.TimeFormat))
+	str := c.GetHeader("If-Modified-Since")
+	if str != "" {
+		sinceTime, err := time.Parse(http.TimeFormat, str)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			if sinceTime.Unix() > fileModifiedTime.Unix() {
+				c.Status(http.StatusNotModified)
+				return
+			}
+		}
+	}
+
+	err := sem.Acquire(c, 1)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	defer func() {
+		debug.FreeOSMemory()
+		sem.Release(1)
+	}()
+
+	var inputBuf []byte
+	if fileIsImage {
+		inputBuf = readFile(action)
+	} else {
+		inputBuf = videoFirstFrame(action)
+	}
+
+	c.Data(http.StatusOK, "image/jpeg", imagePreview(action))
+	return
+
+	decoder, err := lilliput.NewDecoder(inputBuf)
+	// this error reflects very basic checks,
+	// mostly just for the magic bytes of the file to match known image formats
+	if err != nil {
+		fmt.Printf("error decoding image, %s\n", err)
+		c.Redirect(http.StatusFound, "/assets/file.webp")
+		return
+	}
+	defer decoder.Close()
+
+	if decoder.Duration() != 0 {
+		fmt.Printf("duration: %.2f s\n", float64(decoder.Duration())/float64(time.Second))
+	}
+
+	outputImg := make([]byte, 1*1024*1024)
+
+	header, err := decoder.Header()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	opts := &lilliput.ImageOptions{
+		FileType:             ".webp",
+		Width:                400 * header.Width() / header.Height(),
+		Height:               400,
+		ResizeMethod:         lilliput.ImageOpsFit,
+		NormalizeOrientation: true,
+		EncodeOptions:        EncodeOptions[".webp"],
+	}
+
+	if header.Height() > 4*1024 || header.Width() > 4*1024 {
+		mutex.Lock()
+		// resize and transcode image
+		outputImg, err = opsBig.Transform(decoder, opts, outputImg)
+		mutex.Unlock()
+	} else {
+		ops := lilliput.NewImageOps(maxInt(header.Width(), header.Height()))
+		outputImg, err = ops.Transform(decoder, opts, outputImg)
+		ops.Close()
+	}
+	if err != nil {
+		fmt.Printf("error transforming image, %s\n", err)
+	}
+
+	c.Data(http.StatusOK, "image/webp", outputImg)
+}
+
+func fileHandler(c *gin.Context) {
+	action := c.Param("action")
+
+	fileModifiedTime := modifiedTime(action)
+
+	c.Header("Last-Modified", fileModifiedTime.Format(http.TimeFormat))
+
+	str := c.GetHeader("If-Modified-Since")
+	if str != "" {
+		sinceTime, err := time.Parse(http.TimeFormat, str)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			if sinceTime.Unix() > fileModifiedTime.Unix() {
+				c.Status(http.StatusNotModified)
+				return
+			}
+		}
+	}
+
+	c.File(filePath(action))
+}

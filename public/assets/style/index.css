@@ -1,0 +1,87 @@
+.header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.header h1 {
+    flex: 1 auto;
+}
+
+.header a {
+    margin-left: auto;
+}
+
+.link {
+    text-decoration: none;
+    position: relative;
+    color: #35698c;
+    padding-bottom: 3px;
+}
+
+.link:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 100%;
+    width: auto;
+    margin-top: 1px;
+    height: 2px;
+    z-index: -1;
+    background: lightskyblue;
+
+    animation-name: line-out;
+    animation-duration: 300ms;
+    animation-timing-function: ease-in-out;
+    animation-delay: 500ms;
+    animation-fill-mode: backwards;
+}
+
+.link:hover::after, .link:active::after {
+    left: 0;
+    right: 0;
+    animation-delay: 0s;
+    animation-name: line-in;;
+}
+
+@keyframes line-in {
+    from {
+        left: 0;
+        right: 100%;
+    }
+    to {
+        left: 0;
+        right: 0;
+    }
+}
+
+@keyframes line-out {
+    from {
+        left: 0;
+        right: 0;
+    }
+    to {
+        left: 100%;
+        right: 0;
+    }
+}
+
+.button {
+    background-color: coral;
+    border: none;
+    color: white;
+    padding: .5rem 1rem;
+    text-align: center;
+    margin: 4px 2px;
+    opacity: 0.8;
+    transition: 0.3s;
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.button:hover {
+    opacity: 1;
+}

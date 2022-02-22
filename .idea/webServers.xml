@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="c216c4b0-b62f-4675-8a92-409b7928a56e" name="ArchLinux">
+        <fileTransfer accessType="SFTP" host="archlinux.lan" port="22" sshConfigId="adcea7be-9ed6-4991-98ba-90c522fe0979" sshConfig="yan@archlinux.lan:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="c46b6947-6f61-4c8f-8005-8b3cb3d34ceb" name="阿里云">
+        <fileTransfer accessType="SFTP" host="yandage.top" port="22" sshConfigId="6210ace9-6df5-4140-9846-ff9214a64cf3" sshConfig="root@yandage.top:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

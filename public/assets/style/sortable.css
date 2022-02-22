@@ -1,0 +1,54 @@
+table.sortable {
+    border-top: none;
+    width: 100%;
+}
+
+table.sortable td, table.sortable th {
+    padding: 10px;
+}
+
+/*table.sortable thead tr .header {*/
+/*    background-image: url("/assets/table/bg.gif");*/
+/*    background-repeat: no-repeat;*/
+/*    background-position: center right;*/
+/*    cursor: pointer;*/
+/*    border: 1px solid #fff;*/
+/*}*/
+
+/*table.sortable thead tr .headerSortUp {*/
+/*    background-image: url("/assets/table/asc.gif");*/
+/*}*/
+
+/*table.sortable thead tr .headerSortDown {*/
+/*    background-image: url("/assets/table/desc.gif");*/
+/*}*/
+
+table.sortable tbody tr:hover {
+    outline: 1px solid lightseagreen;
+    border-collapse: collapse;
+}
+
+.searchable-header {
+    border-left: 1px solid #fff;
+    border-right: 1px solid #fff;
+    overflow: hidden;
+    padding: 10px;
+}
+
+.no-warp {
+    white-space: nowrap
+}
+
+@media screen and (max-device-width: 520px) {
+    .no-warp {
+        white-space: normal;
+        word-break: keep-all;
+    }
+}
+
+.warp {
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>Gallery</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ .baseUrl }}/assets/style/index.css">
+    <link rel="stylesheet" href="{{ .baseUrl }}/assets/style/waterfall.css">
+</head>
+<body>
+<div class="header">
+    <h1>Index of {{ .title }}</h1>
+    <a class="button" title="列表模式" href="{{ .details }}">列表模式</a>
+</div>
+<hr>
+<div class="content">{{ .folderWaterfall }}</div>
+<hr>
+<div class="content">{{ .pictureWaterfall }}</div>
+<hr>
+<div>{{ .num }}个项目</div>
+</body>
+<script>
+    window.addEventListener("load", function () {
+        setTitleWidth()
+        window.addEventListener("resize", setTitleWidth);
+        let holders = document.getElementsByClassName("picture-holder")
+        for (const holder of holders) {
+            let a = holder.getElementsByTagName("a")[0]
+            let img = a.getElementsByTagName("img")[0]
+            img.addEventListener("load", setTitleWidth)
+        }
+    });
+
+    function setTitleWidth() {
+        let holders = document.getElementsByClassName("picture-holder")
+        for (const holder of holders) {
+            let a = holder.getElementsByTagName("a")[0]
+            let img = a.getElementsByTagName("img")[0]
+            let p = a.getElementsByClassName("picture-title")[0]
+            p.style.maxWidth = img.width - 20 + "px"
+        }
+    }
+</script>
+</html>

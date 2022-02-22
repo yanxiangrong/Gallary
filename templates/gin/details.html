@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>Gallery</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ .baseUrl }}/assets/style/index.css">
+    <link rel="stylesheet" href="{{ .baseUrl }}/assets/style/sortable.css">
+</head>
+<body>
+<div class="header">
+    <h1>Index of {{ .title }}</h1>
+    <a class="button" title="大图模式" href="{{ .waterfall }}">大图模式</a>
+</div>
+<hr>
+<table class="sortable">
+    <thead>
+    <tr style="background-color: #ebebeb;">
+        <th>名称</th>
+        <th>修改日期</th>
+        <th>类型</th>
+        <th>大小</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{ .tbody }}
+    </tbody>
+</table>
+<hr>
+<div>{{ .num }}个项目</div>
+</body>
+
+</html>

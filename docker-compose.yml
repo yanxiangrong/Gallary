@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  gallery:
+    build: .
+    expose:
+      - 80
+    volumes:
+      - /file-storage:/storage
+    restart: unless-stopped
+
