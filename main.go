@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Gallery/webdav"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -40,6 +41,8 @@ func setupRouter() *gin.Engine {
 				context.Redirect(http.StatusMovedPermanently, path.Join(baseUrl, folderBaseUrl))
 			})
 		}
+
+		webdav.Add(baseUrl, baseDirectory)
 	}
 
 	return r
@@ -48,6 +51,8 @@ func setupRouter() *gin.Engine {
 func main() {
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
+
+	go webdav.Run()
 	err := r.Run(":80")
 	if err != nil {
 		fmt.Println(err.Error())
