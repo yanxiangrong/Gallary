@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/h2non/bimg"
 	"github.com/h2non/filetype"
 	"golang.org/x/sync/semaphore"
 	"html/template"
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	maxThread = 4
+	maxThread = 1
 )
 
 var (
@@ -71,11 +72,6 @@ func (group handlersGroup) previewHandler(c *gin.Context) {
 	fileIsImage := filetype.IsImage(file)
 	fileIsVideo := filetype.IsVideo(file)
 
-	if !(fileIsImage || fileIsVideo) {
-		c.Redirect(http.StatusFound, path.Join(group.GroupName, "/assets/file.webp"))
-		return
-	}
-
 	fileModifiedTime := modifiedTime(directory)
 
 	c.Header("Last-Modified", fileModifiedTime.Format(http.TimeFormat))
@@ -103,11 +99,6 @@ func (group handlersGroup) previewHandler(c *gin.Context) {
 		sem.Release(1)
 	}()
 
-	switch http.DetectContentType(file) {
-	case "image/gif":
-		c.Data(http.StatusOK, "image/gif", gifPreview(directory))
-		return
-	}
 	if fileIsImage {
 		c.Data(http.StatusOK, "image/jpeg", imagePreview(directory))
 		return
@@ -116,7 +107,30 @@ func (group handlersGroup) previewHandler(c *gin.Context) {
 		c.Data(http.StatusOK, "image/gif", videoPreview(directory))
 		return
 	}
-	c.Redirect(http.StatusFound, path.Join(group.GroupName, "/assets/file.webp"))
+
+	switch http.DetectContentType(file) {
+	case "image/gif":
+		c.Data(http.StatusOK, "image/gif", gifPreview(directory))
+		return
+	case "application/pdf":
+		buffer, err := bimg.Read(directory)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		newImage, err := bimg.NewImage(buffer).Convert(bimg.JPEG)
+		if err != nil {
+			fmt.Println(err)
+		}
+		c.Data(http.StatusOK, "image/jpeg", newImage)
+		return
+
+	default:
+		c.Redirect(http.StatusFound, path.Join(group.GroupName, "/assets/file.webp"))
+		return
+	}
+
+	//c.Redirect(http.StatusFound, path.Join(group.GroupName, "/assets/file.webp"))
 }
 
 func (group handlersGroup) fileHandler(c *gin.Context) {
