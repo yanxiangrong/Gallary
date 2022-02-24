@@ -53,7 +53,7 @@ func main() {
 	// Listen and Server in 0.0.0.0:8080
 
 	go webdav.Run()
-	err := r.Run(":8080")
+	err := r.Run(":80")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
