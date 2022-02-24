@@ -4,5 +4,5 @@ COPY . .
 RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
 RUN go env -w GO111MODULE=on && go env -w GOPROXY=https://goproxy.cn
 RUN go build -o Gallery .
-RUN apt update && apt install -y ffmpeg
+RUN apt update && apt install -y ffmpeg libvips-dev
 ENTRYPOINT ["./Gallery"]
