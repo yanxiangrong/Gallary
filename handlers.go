@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	maxThread = 4
+	maxThread = 1
 )
 
 var (
