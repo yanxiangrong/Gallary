@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"net/http"
 	"path"
+	"runtime/debug"
 	"time"
 )
 
@@ -98,6 +99,7 @@ func (group handlersGroup) previewHandler(c *gin.Context) {
 	}
 
 	defer func() {
+		debug.FreeOSMemory()
 		sem.Release(1)
 	}()
 
