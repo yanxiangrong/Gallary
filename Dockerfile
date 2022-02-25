@@ -1,8 +1,10 @@
-FROM golang:1.17
+FROM ubuntu:latest
 WORKDIR /go/src/Gallery/
 COPY . .
-RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+RUN apt-get update && apt-get upgrade -y
+RUN DEBIAN_FRONTEND=noninteractive TZ=Asia/Shangshai apt-get install -y tzdata
+RUN apt-get install -y ffmpeg libvips-dev golang
 RUN go env -w GO111MODULE=on && go env -w GOPROXY=https://goproxy.cn
-RUN apt update && apt upgrade -y && apt install -y ffmpeg libvips-dev
 RUN go build -o Gallery .
 ENTRYPOINT ["./Gallery"]
