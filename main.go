@@ -3,6 +3,7 @@ package main
 import (
 	"Gallery/webdav"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"path"
@@ -17,7 +18,8 @@ func setupRouter() *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
-	r.Use(Logger())
+	r.Use(cors.Default())
+	//r.Use(Logger())
 
 	r.LoadHTMLGlob("templates/gin/*")
 	r.StaticFile("/favicon.ico", "public/favicon.ico")

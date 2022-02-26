@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/docker/go-units v0.4.0
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/h2non/bimg v1.1.7
 	github.com/h2non/filetype v1.1.3
